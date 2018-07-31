@@ -155,8 +155,10 @@ def distorted_inputs():
     if not FLAGS.data_dir:
         raise ValueError('Please supply a data_dir')
     data_dir = os.path.join(FLAGS.data_dir, 'cifar-10-batches-bin')
-    images, labels = cifar10_input.distorted_inputs(data_dir=data_dir,
-                                                    batch_size=FLAGS.batch_size)
+    images, labels = cifar10_input.distorted_inputs(
+        data_dir=data_dir,
+        batch_size=FLAGS.batch_size
+    )
     if FLAGS.use_fp16:
         images = tf.cast(images, tf.float16)
         labels = tf.cast(labels, tf.float16)
@@ -248,7 +250,7 @@ def inference(images):
     # beta：指数系数
     norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
                       name='norm1')
-
+    # print("norm1", norm1)
     # conv2
     # 卷积层2
     with tf.variable_scope('conv2') as scope:
@@ -261,7 +263,6 @@ def inference(images):
 
         # 第二层卷积函数，第一层卷积层的输出norm1为输入的参数
         conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
-
         # biases偏置量是一个一维矩阵
         # 第1维是偏置量的深度（64）
         # 初始化为数值都是0.0的一维矩阵
@@ -286,15 +287,19 @@ def inference(images):
     # 池化层2，最大值池化
     # ksize：池化窗口的大小，取一个四维向量，一般是[1, height, width, 1]
     # strides：和卷积类似，窗口在每一个维度上滑动的步长，一般也是[1, stride,stride, 1]
-    pool2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1],
-                           strides=[1, 2, 2, 1], padding='SAME', name='pool2')
+    pool2 = tf.nn.max_pool(
+        norm2, ksize=[1, 3, 3, 1],
+        strides=[1, 2, 2, 1],
+        padding='SAME',
+        name='pool2'
+    )  # 重叠池化核
 
-    # local3
+    # local3 : 局部连接
     with tf.variable_scope('local3') as scope:
         # Move everything into depth so we can perform a single matrix multiply.
         reshape = tf.reshape(pool2, [FLAGS.batch_size, -1])
         dim = reshape.get_shape()[1].value
-
+        # dim = 2304
         # 创建一个带有权重衰减的卷积核（初始化值为截断正态分布的随机数，stddev为标准差，wd：衰减的权重值）
         weights = _variable_with_weight_decay(
             'weights',
@@ -305,11 +310,16 @@ def inference(images):
 
         # 偏置常量
         biases = _variable_on_cpu(
-            'biases', [384], tf.constant_initializer(0.1))
+            'biases', [384],
+            tf.constant_initializer(0.1)
+        )
 
         # 激活函数
-        local3 = tf.nn.relu(tf.matmul(reshape, weights) +
-                            biases, name=scope.name)
+        local3 = tf.nn.relu(
+            tf.matmul(reshape, weights) + biases,
+            name=scope.name
+        )
+        print(local3)
         _activation_summary(local3)
 
     # local4
@@ -323,8 +333,10 @@ def inference(images):
             'biases', [192], tf.constant_initializer(0.1))
 
         # 激活函数
-        local4 = tf.nn.relu(tf.matmul(local3, weights) +
-                            biases, name=scope.name)
+        local4 = tf.nn.relu(
+            tf.matmul(local3, weights) + biases,
+            name=scope.name
+        )
         _activation_summary(local4)
 
     # linear layer(WX + b),
@@ -334,11 +346,15 @@ def inference(images):
     with tf.variable_scope('softmax_linear') as scope:
         # 创建一个带有权重衰减的卷积核（初始化值为截断正态分布的随机数，stddev为标准差，
         # wd：衰减的权重值；为0表示不添加权重衰减）
-        weights = _variable_with_weight_decay('weights', [192, NUM_CLASSES],
-                                              stddev=1/192.0, wd=0.0)
+        weights = _variable_with_weight_decay(
+            'weights', [192, NUM_CLASSES],
+            stddev=1/192.0, wd=0.0
+        )
         # 偏置常量
-        biases = _variable_on_cpu('biases', [NUM_CLASSES],
-                                  tf.constant_initializer(0.0))
+        biases = _variable_on_cpu(
+            'biases', [NUM_CLASSES],
+            tf.constant_initializer(0.0)
+        )
         # 激活函数，
         softmax_linear = tf.add(
             tf.matmul(local4, weights), biases, name=scope.name)
