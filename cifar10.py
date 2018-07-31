@@ -343,14 +343,25 @@ def loss(logits, labels):
     Loss tensor of type float.
   """
   # Calculate the average cross entropy loss across the batch.
+  #将labels转换为int64类型
   labels = tf.cast(labels, tf.int64)
+
+  #计算labels和logits的交叉熵
+  # labels 的每一行是 one-hot 表示，也就是只有一个地方为 1，其他地方为 0，shape是 `[d_0, d_1, ..., d_{r-1}]'
+  #logits的shape 是 [d_0, d_1, ..., d_{r-1},num_classes]
+  #对 logits 使用 softmax 操作，Softmax 的输出表征了不同类别之间的相对概率（概率和为1）
   cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
       labels=labels, logits=logits, name='cross_entropy_per_example')
+
+  #对cross_entropy求平均值
   cross_entropy_mean = tf.reduce_mean(cross_entropy, name='cross_entropy')
+
+  #将cross_entropy_mean添加到列表losses中
   tf.add_to_collection('losses', cross_entropy_mean)
 
   # The total loss is defined as the cross entropy loss plus all of the weight
   # decay terms (L2 loss).
+  #将列表元素相加并返回
   return tf.add_n(tf.get_collection('losses'), name='total_loss')
 
 

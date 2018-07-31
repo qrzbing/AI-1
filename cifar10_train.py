@@ -77,11 +77,11 @@ def train():
     # Build a Graph that computes the logits predictions from the
     # inference model.
     #构建一个图形，用于计算推理模型中的logits的预测值
-    #使用CNN，经过卷积和池化层处理。
+    #使用CNN，经过卷积和池化层处理。返回处理后结果
     logits = cifar10.inference(images)
 
     # Calculate loss.
-    #缺失值
+    #求误差值
     loss = cifar10.loss(logits, labels)
 
     # Build a Graph that trains the model with one batch of examples and
