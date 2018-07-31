@@ -110,6 +110,5 @@ cifar10_train/
 cifar10_eval/
 cifar10_data/
 
-BUILD
 *.jpg
 .idea/
