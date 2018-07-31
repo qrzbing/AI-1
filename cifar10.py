@@ -64,7 +64,7 @@ NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = cifar10_input.NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
 
 
 # Constants describing the training process.
-MOVING_AVERAGE_DECAY = 0.9999     # The decay to use for the moving average.
+MOVING_AVERAGE_DECAY = 0.9999     # The decay to use for the moving average. 滑动平均基值
 NUM_EPOCHS_PER_DECAY = 350.0      # Epochs after which learning rate decays.
 LEARNING_RATE_DECAY_FACTOR = 0.1  # Learning rate decay factor.
 INITIAL_LEARNING_RATE = 0.1       # Initial learning rate.
@@ -188,7 +188,7 @@ def inputs(eval_data):
 
 
 def inference(images):
-    """Build the CIFAR-10 model.
+    """Build the CIFAR-10 model. 这个应该就是前向传播层了
 
     Args:
       images: Images returned from distorted_inputs() or inputs().
