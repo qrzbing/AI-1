@@ -133,6 +133,7 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
   var = _variable_on_cpu(
       name,
       shape,
+      #截断正态分布，stddev为标准差，dtype为数值类型
       tf.truncated_normal_initializer(stddev=stddev, dtype=dtype))
   if wd is not None:
     weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
@@ -203,7 +204,7 @@ def inference(images):
   # conv1
   #卷积层1
   with tf.variable_scope('conv1') as scope:
-    #创建一个带有权重衰减的卷积核（初始化值为截断正态分布的随机数）
+    #创建一个带有权重衰减的卷积核（初始化值为截断正态分布的随机数，stddev为标准差，dtype为数值类型）
     kernel = _variable_with_weight_decay('weights',
                                          shape=[5, 5, 3, 64],
                                          stddev=5e-2,
@@ -226,34 +227,55 @@ def inference(images):
     _activation_summary(conv1)
 
   # pool1
-  #池化层1，最大值池化
+  #池化层1，最大值池化，
+  # ksize：池化窗口的大小，取一个四维向量，一般是[1, height, width, 1]
+  #strides：和卷积类似，窗口在每一个维度上滑动的步长，一般也是[1, stride,stride, 1]
   pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
                          padding='SAME', name='pool1')
   # norm1
   #局部归一化
+  # bias：偏置量；
+  # alpha：乘积系数，是在计算完囊括范围内的 kernel 的激活值之和之后再对其进行乘积；
+  # beta：指数系数
   norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
                     name='norm1')
 
   # conv2
   #卷积层2
   with tf.variable_scope('conv2') as scope:
+    # 创建一个带有权重衰减的卷积核（初始化值为截断正态分布的随机数）
     kernel = _variable_with_weight_decay('weights',
                                          shape=[5, 5, 64, 64],
                                          stddev=5e-2,
                                          wd=0.0)
-    #第二层卷积函数，输入的参数为第一层卷积层的输出norm1
+
+    #第二层卷积函数，第一层卷积层的输出norm1为输入的参数
     conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
+
+    # biases偏置量是一个一维矩阵
+    # 第1维是偏置量的深度（64）
+    # 初始化为数值都是0.0的一维矩阵
     biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
+
+    # tf.nn.bias_add提供了一个方便的函数给节点添加偏置量，得到结果
     pre_activation = tf.nn.bias_add(conv, biases)
+
+    # 激活函数，用的是tf.nn.relu（修正线性单元）来处理
+    # 把计算结果通过relu激活函数进行去线性化
     conv2 = tf.nn.relu(pre_activation, name=scope.name)
     _activation_summary(conv2)
 
   # norm2
-  #归一化2
+  #局部归一化2
+  # bias：偏置量；
+  # alpha：乘积系数，是在计算完囊括范围内的 kernel 的激活值之和之后再对其进行乘积；
+  # beta：指数系数
   norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
                     name='norm2')
   # pool2
-  #池化层2
+  #池化层2，最大值池化
+  # ksize：池化窗口的大小，取一个四维向量，一般是[1, height, width, 1]
+  # strides：和卷积类似，窗口在每一个维度上滑动的步长，一般也是[1, stride,stride, 1]
   pool2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1],
                          strides=[1, 2, 2, 1], padding='SAME', name='pool2')
 
