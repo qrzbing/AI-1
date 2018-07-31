@@ -189,7 +189,7 @@ def inputs(eval_data):
 
 
 def inference(images):
-    """Build the CIFAR-10 model.
+    """Build the CIFAR-10 model. 应该是前向传播层
 
     Args:
       images: Images returned from distorted_inputs() or inputs().
@@ -207,10 +207,12 @@ def inference(images):
     with tf.variable_scope('conv1') as scope:
         # 创建一个带有权重衰减的卷积核（初始化值为截断正态分布的随机数，stddev为标准差，
         # wd：衰减的权重值，为0 表示不添加权重衰减）
-        kernel = _variable_with_weight_decay('weights',
-                                             shape=[5, 5, 3, 64],
-                                             stddev=5e-2,
-                                             wd=0.0)
+        kernel = _variable_with_weight_decay(
+            'weights',
+            shape=[5, 5, 3, 64],  # 卷积核的形状为
+            stddev=5e-2,
+            wd=0.0
+        )
         # 实现卷积的函数
         conv = tf.nn.conv2d(images, kernel, [1, 1, 1, 1], padding='SAME')
 
@@ -232,8 +234,13 @@ def inference(images):
     # 池化层1，最大值池化，
     # ksize：池化窗口的大小，取一个四维向量，一般是[1, height, width, 1]
     # strides：和卷积类似，窗口在每一个维度上滑动的步长，一般也是[1, stride,stride, 1]
-    pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1],
-                           padding='SAME', name='pool1')
+    pool1 = tf.nn.max_pool(
+        conv1,
+        ksize=[1, 3, 3, 1],
+        strides=[1, 2, 2, 1],
+        padding='SAME',
+        name='pool1'
+    )
     # norm1
     # 局部归一化
     # bias：偏置量；
@@ -289,8 +296,12 @@ def inference(images):
         dim = reshape.get_shape()[1].value
 
         # 创建一个带有权重衰减的卷积核（初始化值为截断正态分布的随机数，stddev为标准差，wd：衰减的权重值）
-        weights = _variable_with_weight_decay('weights', shape=[dim, 384],
-                                              stddev=0.04, wd=0.004)
+        weights = _variable_with_weight_decay(
+            'weights',
+            shape=[dim, 384],
+            stddev=0.04,
+            wd=0.004
+        )
 
         # 偏置常量
         biases = _variable_on_cpu(
