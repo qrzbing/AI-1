@@ -233,19 +233,21 @@ def inputs(eval_data, data_dir, batch_size):
 
     # Create a queue that produces the filenames to read.
     filename_queue = tf.train.string_input_producer(filenames)
-
+    # print(filename_queue.size)
     # Read examples from files in the filename queue.
     read_input = read_cifar10(filename_queue)
     reshaped_image = tf.cast(read_input.uint8image, tf.float32)
-
+    # print(reshaped_image)
     height = IMAGE_SIZE
     width = IMAGE_SIZE
 
     # Image processing for evaluation.
     # Crop the central [height, width] of the image.
-    resized_image = tf.image.resize_image_with_crop_or_pad(reshaped_image,
-                                                           height, width)
-
+    resized_image = tf.image.resize_image_with_crop_or_pad(
+        reshaped_image,
+        height, width
+    )
+    # print(resized_image)
     # Subtract off the mean and divide by the variance of the pixels.
     float_image = tf.image.per_image_standardization(resized_image)
 
@@ -257,8 +259,9 @@ def inputs(eval_data, data_dir, batch_size):
     min_fraction_of_examples_in_queue = 0.4
     min_queue_examples = int(num_examples_per_epoch *
                              min_fraction_of_examples_in_queue)
-
     # Generate a batch of images and labels by building up a queue of examples.
-    return _generate_image_and_label_batch(float_image, read_input.label,
-                                           min_queue_examples, batch_size,
-                                           shuffle=False)
+    return _generate_image_and_label_batch(
+        float_image, read_input.label,
+        min_queue_examples, batch_size,
+        shuffle=False
+    )

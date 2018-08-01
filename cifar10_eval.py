@@ -155,12 +155,13 @@ def evaluate():
         # Get images and labels for CIFAR-10.
         eval_data = FLAGS.eval_data == 'test'
         images, labels = cifar10.inputs(eval_data=eval_data)
-
+        print(images)
+        print(labels)
         # Build a Graph that computes the logits predictions from the
         # inference model.
         # 从我们建立的推理模型（应该是前向过程）计算出logits模型
         logits = cifar10.inference(images)
-
+        print(logits)
         # Calculate predictions. 计算预测值
         top_k_op = tf.nn.in_top_k(logits, labels, 1)
         # 返回 label 数量的一个bool型张量
