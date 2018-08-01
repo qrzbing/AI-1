@@ -410,6 +410,7 @@ def _add_loss_summaries(total_loss):
       loss_averages_op: op for generating moving averages of losses.
     """
     # Compute the moving average of all individual losses and the total loss.
+    # 定义滑动平均
     loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
     losses = tf.get_collection('losses')
     loss_averages_op = loss_averages.apply(losses + [total_loss])
@@ -443,11 +444,14 @@ def train(total_loss, global_step):
     decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
 
     # Decay the learning rate exponentially based on the number of steps.
-    lr = tf.train.exponential_decay(INITIAL_LEARNING_RATE,
-                                    global_step,
-                                    decay_steps,
-                                    LEARNING_RATE_DECAY_FACTOR,
-                                    staircase=True)
+    # 对学习率进行操作，定义指数衰减学习率
+    lr = tf.train.exponential_decay(
+        INITIAL_LEARNING_RATE,
+        global_step,
+        decay_steps,
+        LEARNING_RATE_DECAY_FACTOR,
+        staircase=True
+    )
     tf.summary.scalar('learning_rate', lr)
 
     # Generate moving averages of all losses and associated summaries.
@@ -455,6 +459,7 @@ def train(total_loss, global_step):
 
     # Compute gradients.
     with tf.control_dependencies([loss_averages_op]):
+        # 定义训练过程
         opt = tf.train.GradientDescentOptimizer(lr)
         grads = opt.compute_gradients(total_loss)
 
@@ -478,6 +483,7 @@ def train(total_loss, global_step):
     with tf.control_dependencies([apply_gradient_op, variables_averages_op]):
         train_op = tf.no_op(name='train')
 
+    # print(train_op)
     return train_op
 
 

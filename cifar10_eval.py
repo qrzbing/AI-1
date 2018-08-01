@@ -77,6 +77,7 @@ tf.app.flags.DEFINE_boolean(
     'run_once', False,
     """Whether to run eval only once."""
 )
+# TODO: 测试集文件的位置？
 
 
 def eval_once(saver, summary_writer, top_k_op, summary_op):

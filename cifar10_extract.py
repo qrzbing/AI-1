@@ -13,6 +13,7 @@ def inputs_origin(data_dir):
     filenames = [os.path.join(data_dir, 'data_batch_%d.bin' % i)
                  # for i in xrange(1, 6)]
                  for i in range(1, 6)]
+    # print(filenames)
     # 判断文件是否存在
     for f in filenames:
         if not tf.gfile.Exists(f):
@@ -22,6 +23,7 @@ def inputs_origin(data_dir):
     # cifar10_input.read_cifar10是事先写好的从queue中读取文件的函数
     # 返回的结果read_input的属性uint8image就是图像的Tensor
     read_input = cifar10_input.read_cifar10(filename_queue)
+    # print(read_input.uint8image)
     # 将图片转换为实数形式
     reshaped_image = tf.cast(read_input.uint8image, tf.float32)
     # 返回的reshaped_image是一张图片的tensor
